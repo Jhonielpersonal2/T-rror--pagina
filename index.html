@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Películas</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #141414; /* Fondo oscuro */
+            color: #fff; /* Texto blanco */
+        }
+
+        nav {
+            background-color: #141414; /* Fondo oscuro */
+            padding: 17px 0;
+            position: sticky; /* Mantiene el menú en la parte superior */
+            top: 0;
+            z-index: 1000;
+            overflow-x: auto; /* Habilita el desplazamiento horizontal */
+            white-space: nowrap; /* Evita el salto de línea */
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            transition: transform 0.2s, background 0.3s; /* Transiciones para 3D y hover */
+            font-weight: bold;
+            display: inline-block; /* Asegura que los enlaces sean en línea */
+            background-color: red; /* Color de fondo rojo */
+            border-radius: 5px; /* Bordes redondeados */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para efecto 3D */
+        }
+        nav div {
+            margin-left: 20px; /* Agrega espacio al lado izquierdo del contenedor   
+            de enlaces */
+            margin-right: 20px; /* Agrega espacio al lado derecho del contenedor     
+            de enlaces */
+        
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1); /* Efecto hover */
+            transform: translateY(-2px); /* Eleva el botón al pasar el mouse */
+        }
+
+        main {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .movie-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 columnas */
+            gap: 7px;
+            width: 107%;
+            max-width: 1300px; /* Opcional: límite de ancho */
+        }
+
+        .movie {
+            position: relative; /* Para posicionar el ícono de play */
+            cursor: pointer;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: transform 0.2s; /* Transición al pasar el ratón */
+        }
+
+        .movie:hover {
+            transform: scale(1.05); /* Efecto de escala */
+        }
+
+        img {
+    max-width: 100%; /* Mantiene el tamaño dentro del contenedor */
+    height: auto; /* Mantiene la relación de aspecto */
+    border-radius: 1px;
+    display: block; /* Para evitar espacios en imágenes */
+}
+
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px; /* Tamaño del ícono */
+            height: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0; /* Inicialmente oculto */
+            transition: opacity 0.3s; /* Transición de opacidad */
+        }
+
+        .movie:hover .play-icon {
+            opacity: 1; /* Mostrar al pasar el mouse */
+        }
+
+        .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Ocultar el contenido que sobresale */
+    background-color: rgba(0, 0, 0, 0.9); /* Fondo oscuro */
+    justify-content: center;
+    align-items: center;
+}
+
+        .modal-content {
+    background-color: #141414; /* Fondo oscuro como Netflix */
+    margin: auto;
+    padding: 20px;
+    border: none; /* Sin bordes */
+    border-radius: 10px; /* Bordes redondeados */
+    width: 80%;
+    max-width: 800px; /* Límite de ancho de la ventana modal */
+    color: #fff; /* Texto blanco */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidad */
+}
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute; /* Cambiar a absolute */
+            top: 10px; /* Ajustar posición */
+            right: 10px; /* Ajustar posición */
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* Aspect Ratio 16:9 */
+            height: 0;
+            overflow: hidden;
+            margin-bottom: 10px; /* Espacio entre el video y otros elementos */
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .movie-url {
+            margin-top: 10px; /* Espacio superior para el enlace de la película */
+        }
+
+        /* Estilos del reproductor de pantalla completa */
+        .fullscreen-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .fullscreen-player .video-container {
+            width: 200%;
+            max-width: 800px;
+            height: 0;
+            padding-bottom: 56.25%; /* Aspect ratio 16:9 */
+            overflow: hidden;
+            
+        }
+
+        .fullscreen-player .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            
+        }
+
+        .close-button {
+            position: absolute;
+            top: -1px;
+            right: 320px;
+            font-size: 20px;
+            color: #fff;
+            cursor: pointer;
+            z-index: 4000;
+        }
+
+        .movie-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: red;
+            text-decoration: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .movie-button:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .download-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: red; /* Color del botón de descarga */
+            text-decoration: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, background-color 0.3s;
+            font-weight: bold;
+            margin-left: 10px; /* Espacio entre botones */
+        }
+
+        .download-button:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+       /* Estilos para el buscador */
+.search-container {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center; /* Centra el buscador */
+}
+
+.search-input {
+    padding: 12px 20px; /* Añade un poco más de padding */
+    width: 300px; /* Ajusta el ancho según tu diseño */
+    border: 2px solid rgba(255, 255, 255, 0.5); /* Borde semitransparente */
+    border-radius: 25px; /* Borde más redondeado */
+    outline: none;
+    font-size: 16px; /* Aumenta el tamaño de fuente */
+    background-color: rgba(0, 0, 0, 0.7); /* Fondo semitransparente negro */
+    color: white; /* Color de texto blanco */
+    transition: border-color 0.3s, box-shadow 0.3s; /* Transiciones suaves */
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.6); /* Color del texto del placeholder */
+}
+
+.search-input:focus {
+    border-color: #e50914; /* Cambia el color del borde al enfocar */
+    box-shadow: 0 0 10px rgba(229, 9, 20, 0.5); /* Sombra al enfocar */
+}
+
+/* Opcional: Estilos para un botón de búsqueda */
+.search-button {
+    padding: 12px 20px;
+    margin-left: 10px; /* Espacio entre el input y el botón */
+    background-color: #e50914; /* Color rojo de Netflix */
+    color: white;
+    border: none;
+    border-radius: 25px; /* Borde redondeado */
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.search-button:hover {
+    background-color: #b00710; /* Color más oscuro al pasar el mouse */
+}
+
+        .dark-button {
+    background-color: #a50000; /* Color de fondo rojo más oscuro */
+    padding: 10px 20px; /* Mantener el mismo padding que los otros botones */
+    border-radius: 5px; /* Bordes redondeados */
+    transition: background 0.3s; /* Transición para el color de fondo */
+}
+
+.dark-button:hover {
+    background: rgba(255, 255, 255, 0.1); /* Efecto hover */
+}
+    </style>
+</head>
+<body>
+    <nav>
+        <div>
+     <a href="peliculas.html">inicio</a>
+        <a href="peliculas.html" class="dark-button">Películas</a>
+        <a href="terror.html">Terror</a>
+        <a href="infantil.html">Infantil</a>
+        <a href="doramas.html">Doramas</a>
+        <a href="comedia.html">Comedia</a>
+        </div>
+        
+    </nav>
+    <main>
+        <!-- Contenedor para el buscador -->
+       
+  <center>
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="search-input" 
+                class="search-input" 
+                placeholder="Buscar película..." 
+                oninput="filterMovies()" 
+        </div>    
+  </center>
+        
+        <div id="peliculas" class="movie-container"></div>
+    </main>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title"></h2>
+            <div class="video-container" id="video-container">
+                <!-- El iframe se insertará aquí -->
+            </div>           
+            <p id="modal-movie-url" class="movie-url"></p>
+        </div>
+    </div>
+
+    <div class="fullscreen-player" id="fullscreen-player">
+        <div class="video-container">
+            <span class="close-button" onclick="closeFullscreenPlayer()">✖ cerrar</span>
+            <iframe id="chapter-player" src="" scrolling="no" frameborder="0" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-scripts"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let movies = []; // Array para almacenar las películas
+
+        async function loadMovies() {
+            const response = await fetch('https://raw.githubusercontent.com/Jhonielpersonal2/Pel-culas/refs/heads/main/película.m3u');
+            const data = await response.text();
+            const lines = data.split('\n');
+
+            lines.forEach((line, index) => {
+                if (line.startsWith('#EXTINF:')) {
+                    const title = line.split(', ')[1];
+                    const imageUrl = lines[index + 1].trim();
+                    const trailerUrl = lines[index + 2].trim();
+                    const movieUrl = lines[index + 3].trim(); // URL de la película
+                    const downloadUrl = lines[index + 4].trim(); // URL de descarga
+
+                    movies.push({ title, imageUrl, trailerUrl, movieUrl, downloadUrl });
+
+                    const movieElement = document.createElement('div');
+                    movieElement.className = 'movie';
+
+                    movieElement.innerHTML = `
+                        <img src="${imageUrl}" alt="${title}" onclick="openModal('${title}', '${trailerUrl}', '${movieUrl}', '${downloadUrl}')">
+                        <div class="play-icon" onclick="openModal('${title}', '${trailerUrl}', '${movieUrl}', '${downloadUrl}')">
+                            <span style="font-size: 24px;">▶</span>
+                        </div>
+                    `;
+
+                    document.getElementById('peliculas').appendChild(movieElement);
+                }
+            });
+        }
+
+        function filterMovies() {
+            const input = document.getElementById('search-input').value.toLowerCase();
+            const filteredMovies = movies.filter(movie => movie.title.toLowerCase().includes(input));
+            displayMovies(filteredMovies);
+        }
+
+        function displayMovies(filteredMovies) {
+            const movieContainer = document.getElementById('peliculas');
+            movieContainer.innerHTML = '';
+
+            filteredMovies.forEach(movie => {
+                const movieElement = document.createElement('div');
+                movieElement.className = 'movie';
+
+                movieElement.innerHTML = `
+                    <img src="${movie.imageUrl}" alt="${movie.title}" onclick="openModal('${movie.title}', '${movie.trailerUrl}', '${movie.movieUrl}', '${movie.downloadUrl}')">
+                    <div class="play-icon" onclick="openModal('${movie.title}', '${movie.trailerUrl}', '${movie.movieUrl}', '${movie.downloadUrl}')">
+                        <span style="font-size: 24px;">▶</span>
+                    </div>
+                `;
+
+                movieContainer.appendChild(movieElement);
+            });
+        }
+
+        function openModal(title, trailerUrl, movieUrl, downloadUrl) {
+            document.getElementById('modal-title').innerText = title;
+
+            const videoContainer = document.getElementById('video-container');
+            videoContainer.innerHTML = `<iframe src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>`;
+
+            const movieUrlElement = document.getElementById('modal-movie-url');
+            movieUrlElement.innerHTML = `
+                <a href="#" onclick="openFullscreenPlayer('${movieUrl}')" class="movie-button">Ver película</a>
+                <a href="${downloadUrl}" class="download-button" target="_blank">Descargar</a>
+            `;
+
+            document.getElementById('myModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('myModal').style.display = 'none';
+            document.getElementById('video-container').innerHTML = '';
+        }
+
+        function openFullscreenPlayer(movieUrl) {
+            const chapterPlayer = document.getElementById('chapter-player');
+            chapterPlayer.src = movieUrl;
+            document.getElementById('fullscreen-player').style.display = 'flex';
+            closeModal();
+        }
+
+        function closeFullscreenPlayer() {
+            document.getElementById('fullscreen-player').style.display = 'none';
+            document.getElementById('chapter-player').src = '';
+        }
+
+        window.onload = loadMovies;
+    </script>
+</body>
+</html>
